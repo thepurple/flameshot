@@ -1,0 +1,72 @@
+name: Packaging(Windows)
+
+on:
+  push:
+    branches:
+      - master*
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+
+  pull_request:
+    branches:
+      - master*
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+
+env:
+  PRODUCT: flameshot
+
+jobs:
+  windows-pack:
+    name: VS 2019 ${{ matrix.config.arch }}-${{ matrix.type }}
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        qt_ver: [5.15.1]
+        qt_target: [desktop]
+        config:
+          - {
+            arch: x86,
+            generator: "-G'Visual Studio 16 2019' -A Win32",
+            vcpkg_triplet: x86-windows,
+            qt_arch: win32_msvc2019,
+            qt_arch_install: msvc2019,
+            pak_arch: win32
+          }
+          - {
+            arch: x64,
+            generator: "-G'Visual Studio 16 2019' -A x64",
+            vcpkg_triplet: x64-windows,
+            qt_arch: win64_msvc2019_64,
+            qt_arch_install: msvc2019_64,
+            pak_arch: win64
+          }
+        type: [portable, installer]
+    env:
+      VCINSTALLDIR: C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/
+      Qt5_DIR: ${{ github.workspace }}\build\Qt\${{ matrix.qt_ver }}\${{ matrix.config.qt_arch_install }}\lib\cmake\Qt5\
+      QTDIR: ${{ github.workspace }}\build\Qt\${{ matrix.qt_ver }}\${{ matrix.config.qt_arch_install }}\
+
+    steps:
+      - name: Checkout Source code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set env & Print flameshot version
+        shell: bash
+        run: |
+          echo "step 00"
+          git clone https://github.com/microsoft/vcpkg
+          echo "step 01"
+          dir
+          echo "step 02"
+          cd vcpkg
+          echo "step 03"
+          bootstrap-vcpkg.bat
+          echo "step 04"
+          dir
+          echo "step 05"
